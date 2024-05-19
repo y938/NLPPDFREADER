@@ -24,7 +24,7 @@ app = FastAPI()
 # CORS configuration
 origins = [
     "http://localhost:3000",
-    "https://magnificent-ganache-b464dc.netlify.app/",
+    "https://llm-pdfreader.netlify.app/",
 ]
 
 app.add_middleware(
