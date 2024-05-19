@@ -1,8 +1,8 @@
 # NLP PDF Reader
 
-. Video Demo - how.mp4
-. backend/fastapi - https://nlppdfreader.onrender.com/docs
-. front/react - https://llm-pdfreader.netlify.app/
+1. Video Demo - how.mp4
+2. backend/fastapi - https://nlppdfreader.onrender.com/docs
+3. front/react - https://llm-pdfreader.netlify.app/
 
 <video width="100%" controls>
   <source src="how.mp4" type="video/mp4">
