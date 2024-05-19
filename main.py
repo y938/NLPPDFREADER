@@ -21,6 +21,21 @@ genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 app = FastAPI()
 
+# Add CORS middleware
+origins = [
+    "https://llm-pdfreader.netlify.app",  # Add your frontend URL here
+    "http://localhost",  # Allow requests from localhost for local testing
+    "http://localhost:3000",  # Allow requests from localhost:3000 for local testing
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # Allow specific origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # Allow all headers
+)
+
 # Initialize Tortoise ORM
 register_tortoise(
     app,
@@ -42,15 +57,12 @@ def get_pdf_text(pdf_docs):
     text = ""
     for pdf in pdf_docs:
         if isinstance(pdf, bytes):
-            # Handle the case when a single file (bytes object) is uploaded
             pdf_reader = PdfReader(io.BytesIO(pdf))
         else:
-            # Handle the case when multiple files (file paths) are uploaded
             pdf_reader = PdfReader(pdf)
         for page in pdf_reader.pages:
             text += page.extract_text()
     return text
-
 
 def get_text_chunks(text):
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=10000, chunk_overlap=1000)
@@ -100,7 +112,6 @@ async def ask_question(question: str = Form(...)):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
     question_embedding = list(embeddings.embed_query(question))  # Convert to list
     
-    # Retrieve all text chunks and their embeddings
     text_chunks = await TextChunk.all().prefetch_related('embeddings')
     similarities = []
     
@@ -110,10 +121,8 @@ async def ask_question(question: str = Form(...)):
             similarity = np.dot(question_embedding, vector) / (np.linalg.norm(question_embedding) * np.linalg.norm(vector))
             similarities.append((chunk.content, similarity))
     
-    # Get the most relevant text chunk
     most_relevant_chunk = max(similarities, key=lambda item: item[1])[0]
     
-    # Create a Document object with the most relevant chunk
     relevant_document = Document(page_content=most_relevant_chunk)
 
     chain = get_conversational_chain()
@@ -153,21 +162,4 @@ def get_question_generation_chain(question_type: str):
         Question:
         """
     elif question_type == "shortanswer":
-        prompt_template = """
-        Generate a short answer question based on the following text. Provide the correct answer.\n\n
-        Context:\n {context}\n
-        Question:
-        """
-    else:
-        raise ValueError("Invalid question type")
-
-    model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.3)
-
-    prompt = PromptTemplate(template=prompt_template, input_variables=["context"])
-    chain = load_qa_chain(model, chain_type="stuff", prompt=prompt)
-
-    return chain
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+        prompt_template =
