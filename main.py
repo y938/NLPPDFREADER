@@ -24,6 +24,8 @@ app = FastAPI()
 # Add CORS middleware
 origins = [
     "https://llm-pdfreader.netlify.app",  
+    "https://llm-pdfreader.netlify.app/generate",
+    "https://llm-pdfreader.netlify.app/ask",
     "http://localhost", 
     "http://localhost:3000",  
 ]
