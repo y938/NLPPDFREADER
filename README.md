@@ -29,7 +29,8 @@ This will start the backend server, allowing the frontend to communicate with th
 
 ### Frontend Setup
 
-1. Navigate to the `react` directory: cd react
+1. clone https://github.com/y938/front.git
+1. Navigate to the `front` directory: cd front
 2. Install the required npm packages by running:
    npm install axios react-router-dom
 3. Start the frontend server: npm start
