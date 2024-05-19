@@ -21,20 +21,6 @@ genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 app = FastAPI()
 
-# CORS configuration
-origins = [
-    "http://localhost:3000",
-    "https://llm-pdfreader.netlify.app/",
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 # Initialize Tortoise ORM
 register_tortoise(
     app,
