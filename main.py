@@ -23,9 +23,9 @@ app = FastAPI()
 
 # Add CORS middleware
 origins = [
-    "https://llm-pdfreader.netlify.app",  # Add your frontend URL here
-    "http://localhost",  # Allow requests from localhost for local testing
-    "http://localhost:3000",  # Allow requests from localhost:3000 for local testing
+    "https://llm-pdfreader.netlify.app",  
+    "http://localhost", 
+    "http://localhost:3000",  
 ]
 
 app.add_middleware(
@@ -162,4 +162,21 @@ def get_question_generation_chain(question_type: str):
         Question:
         """
     elif question_type == "shortanswer":
-        prompt_template =
+        prompt_template = """
+        Generate a short answer question based on the following text. Provide the correct answer.\n\n
+        Context:\n {context}\n
+        Question:
+        """
+    else:
+        raise ValueError("Invalid question type")
+
+    model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.3)
+
+    prompt = PromptTemplate(template=prompt_template, input_variables=["context"])
+    chain = load_qa_chain(model, chain_type="stuff", prompt=prompt)
+
+    return chain
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
