@@ -15,9 +15,8 @@ from tortoise.contrib.fastapi import register_tortoise
 import numpy as np
 from models import TextChunk, Embedding
 
-load_dotenv()
-os.getenv("GOOGLE_API_KEY")
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+GOOGLE_API_KEY = "AIzaSyASZIWbZ1ejLCcIZivWkbVpc2ILlDRcvNw"
+genai.configure(api_key=GOOGLE_API_KEY)
 
 app = FastAPI()
 
