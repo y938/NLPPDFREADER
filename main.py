@@ -14,32 +14,28 @@ from dotenv import load_dotenv
 from tortoise.contrib.fastapi import register_tortoise
 import numpy as np
 from models import TextChunk, Embedding
-import logging
 
-GOOGLE_API_KEY = "AIzaSyASZIWbZ1ejLCcIZivWkbVpc2ILlDRcvNw"
-
-if not GOOGLE_API_KEY:
-    raise ValueError("GOOGLE_API_KEY environment variable is not set.")
-
-genai.configure(api_key=GOOGLE_API_KEY)
+load_dotenv()
+os.getenv("GOOGLE_API_KEY")
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 app = FastAPI()
 
-# Add CORS middleware
+# CORS configuration
 origins = [
     "https://llm-pdfreader.netlify.app",  
     "https://llm-pdfreader.netlify.app/generate",
     "https://llm-pdfreader.netlify.app/ask",
     "http://localhost", 
-    "http://localhost:3000",  
+    "http://localhost:3000", 
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # Allow specific origins
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],  # Allow all HTTP methods
-    allow_headers=["*"],  # Allow all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Initialize Tortoise ORM
@@ -63,12 +59,15 @@ def get_pdf_text(pdf_docs):
     text = ""
     for pdf in pdf_docs:
         if isinstance(pdf, bytes):
+            # Handle the case when a single file (bytes object) is uploaded
             pdf_reader = PdfReader(io.BytesIO(pdf))
         else:
+            # Handle the case when multiple files (file paths) are uploaded
             pdf_reader = PdfReader(pdf)
         for page in pdf_reader.pages:
             text += page.extract_text()
     return text
+
 
 def get_text_chunks(text):
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=10000, chunk_overlap=1000)
@@ -76,15 +75,11 @@ def get_text_chunks(text):
     return chunks
 
 async def store_embeddings(text_chunks):
-    try:
-        embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-        for chunk in text_chunks:
-            vector = list(embeddings.embed_query(chunk))  # Convert to list
-            text_chunk_obj = await TextChunk.create(content=chunk)
-            await Embedding.create(text_chunk=text_chunk_obj, vector=vector)
-    except Exception as e:
-        logging.error(f"Error storing embeddings: {e}")
-        raise e
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+    for chunk in text_chunks:
+        vector = list(embeddings.embed_query(chunk))  # Convert to list
+        text_chunk_obj = await TextChunk.create(content=chunk)
+        await Embedding.create(text_chunk=text_chunk_obj, vector=vector)
 
 def get_conversational_chain():
     prompt_template = """
@@ -122,6 +117,7 @@ async def ask_question(question: str = Form(...)):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
     question_embedding = list(embeddings.embed_query(question))  # Convert to list
     
+    # Retrieve all text chunks and their embeddings
     text_chunks = await TextChunk.all().prefetch_related('embeddings')
     similarities = []
     
@@ -131,8 +127,10 @@ async def ask_question(question: str = Form(...)):
             similarity = np.dot(question_embedding, vector) / (np.linalg.norm(question_embedding) * np.linalg.norm(vector))
             similarities.append((chunk.content, similarity))
     
+    # Get the most relevant text chunk
     most_relevant_chunk = max(similarities, key=lambda item: item[1])[0]
     
+    # Create a Document object with the most relevant chunk
     relevant_document = Document(page_content=most_relevant_chunk)
 
     chain = get_conversational_chain()
