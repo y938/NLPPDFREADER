@@ -20,11 +20,10 @@ Before you start, make sure you have the following:
 
 ### Backend Setup
 
-1. Create a `.env` file in the root directory of the project.
-2. Inside the `.env` file => GOOGLE_API_KEY="your api key"
-3. Install the required Python dependencies by running: 
+1. Inside the `.env` file => GOOGLE_API_KEY="your api key"
+2. Install the required Python dependencies by running: 
    pip install -r requirements.txt
-4. Run the backend server using the following command:
+3. Run the backend server using the following command:
    uvicorn main:app --reload
 
 This will start the backend server, allowing the frontend to communicate with the Gemini API.
